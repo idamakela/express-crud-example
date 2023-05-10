@@ -49,7 +49,6 @@ let nextId = 28234;
 // Lägg till ny karaktär
 router.post("/", (req, res) => {
   const character = req.body.character;
-
   const newCharacter = {
     ...character,
     id: nextId,

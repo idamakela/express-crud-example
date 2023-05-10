@@ -1,8 +1,17 @@
 const express = require("express");
 const characters = require("./routes/characters");
+const cors = require("cors");
 
 const app = express();
 const port = 3001;
+
+// Configure CORS policy
+const corsOptions = {
+  origin: "http://localhost:3000", // Only allow requests from localhost:3000
+};
+
+// Apply CORS middleware to all routes
+app.use(cors(corsOptions));
 
 // Använd JSON-middleware
 app.use(express.json());
@@ -11,7 +20,6 @@ const validApiKey = "5";
 
 const authenticateApiKey = (req, res, next) => {
   const apiKey = req.query.apiKey;
-  console.log(req.query);
 
   if (!apiKey) {
     return res
