@@ -6,97 +6,81 @@ const supabase = require("../lib/supabaseClient");
 // Ladda initialdata
 let characters = mockData;
 
+// Foreign key -> delete cascade.
+
 // Hämta alla karaktärer
+// Fetch all characters
 router.get("/", async (req, res) => {
-  const { data, error } = await supabase.from("characters").select(`
-  name,
-  id,
-  powers (
-    id,
-    power
-  )
-  `);
-
-  // const { data, error } = await supabase
-  // .from('users')
-  // .select(`
-  //   name,
-  //   teams (
-  //     name
-  //   )
-  // `)
-
+  const { data, error, status } = await supabase.from("characters").select("*");
+  if (error) {
+    return res.status(status).json({ error: error.message });
+  }
   res.json(data);
 });
 
 // Hämta en specifik karaktär baserat på ID
-router.get("/:id", (req, res) => {
+router.get("/:id", async (req, res) => {
   const id = req.params.id;
-  const numberId = parseInt(id);
-  const character = characters.find((char) => char.id === numberId);
+  const { data, error, status } = await supabase
+    .from("characters")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-  if (!character) {
-    return res
-      .status(404)
-      .json({ message: "Ingen karaktär med det idt kunde hittas!" });
+  if (error) {
+    return res.status(status).json({ error: error.message });
   }
 
-  res.json(character);
+  res.json(data);
 });
 
 // Ta bort en karaktär baserat på ID
-router.delete("/:id", (req, res) => {
+router.delete("/:id", async (req, res) => {
   const id = req.params.id;
-  const numberId = parseInt(id);
+  const { error, status } = await supabase
+    .from("characters")
+    .delete()
+    .eq("id", id);
 
-  const character = characters.find((char) => char.id === numberId);
-
-  if (!character) {
-    return res
-      .status(404)
-      .json({ message: "Ingen karaktär med det idt kunde hittas!" });
+  if (error) {
+    return res.status(status).json({ error: error.message });
   }
-  const newData = characters.filter((char) => char.id !== numberId);
-  characters = newData;
-
-  res.json({ message: "Karaktären har blivit borttagen!" });
+  res.json({ message: "Character has been deleted" });
 });
 
 // Skapa ett nytt unikt ID för nya karaktärer
 let nextId = 28234;
 
 // Lägg till ny karaktär
-router.post("/", (req, res) => {
-  const character = req.body.character;
-  const newCharacter = {
-    ...character,
-    id: nextId,
-  };
+router.post("/", async (req, res) => {
+  const body = req.body;
+  const { data, error, status } = await supabase
+    .from("characters")
+    .insert(body)
+    .select();
 
-  nextId++;
+  if (error) {
+    return res.status(status).json({ error: error.message });
+  }
 
-  characters.push(newCharacter);
-  res.json(newCharacter);
+  res.json(data);
 });
 
 // Uppdatera en karaktär baserat på ID
-router.put("/:id", (req, res) => {
+router.put("/:id", async (req, res) => {
   const id = req.params.id;
-  const numberId = parseInt(id);
-  const character = req.body.character;
+  const updates = req.body;
+  const { data, error } = await supabase
+    .from("characters")
+    .update(updates)
+    .eq("id", id)
+    .select();
 
-  const index = characters.findIndex((char) => char.id === numberId);
-
-  if (index === -1) {
-    return res
-      .status(404)
-      .json({ message: "Inget id matchar någon befintlig karaktär" });
+  if (error) {
+    return res.status(500).json({ error: error.message });
   }
 
-  const updatedCharacter = { ...characters[index], ...character };
-  characters[index] = updatedCharacter;
-
-  res.json(updatedCharacter);
+  res.json(data[0]);
 });
 
 module.exports = router;
