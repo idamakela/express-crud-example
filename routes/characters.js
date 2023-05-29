@@ -1,13 +1,32 @@
 const express = require("express");
 const router = express.Router();
 const mockData = require("../mockData");
+const supabase = require("../lib/supabaseClient");
 
 // Ladda initialdata
 let characters = mockData;
 
 // Hämta alla karaktärer
-router.get("/", (req, res) => {
-  res.json(characters);
+router.get("/", async (req, res) => {
+  const { data, error } = await supabase.from("characters").select(`
+  name,
+  id,
+  powers (
+    id,
+    power
+  )
+  `);
+
+  // const { data, error } = await supabase
+  // .from('users')
+  // .select(`
+  //   name,
+  //   teams (
+  //     name
+  //   )
+  // `)
+
+  res.json(data);
 });
 
 // Hämta en specifik karaktär baserat på ID
