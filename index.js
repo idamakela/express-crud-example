@@ -5,13 +5,8 @@ const cors = require('cors');
 const app = express();
 const port = 3001;
 
-// Configure CORS policy
-const corsOptions = {
-  origin: 'http://localhost:3000', // Only allow requests from localhost:3000
-};
-
 // Apply CORS middleware to all routes
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Använd JSON-middleware
 app.use(express.json());
@@ -47,3 +42,5 @@ app.use('/characters', characters);
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
+module.exports = app;
