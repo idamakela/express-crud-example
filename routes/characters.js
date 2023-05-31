@@ -1,19 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const mockData = require("../mockData");
 const supabase = require("../lib/supabaseClient");
 
-// Ladda initialdata
-let characters = mockData;
-
-// Foreign key -> delete cascade.
-
 // Hämta alla karaktärer
-// Fetch all characters
 router.get("/", async (req, res) => {
-  const { data, error, status } = await supabase.from("characters").select("*");
+  const { data, error, status } = await supabase.from("characters").select(`*`);
+
   if (error) {
-    return res.status(status).json({ error: error.message });
+    res.status(status).json({ error });
   }
   res.json(data);
 });
@@ -28,7 +22,7 @@ router.get("/:id", async (req, res) => {
     .single();
 
   if (error) {
-    return res.status(status).json({ error: error.message });
+    res.status(status).json({ error });
   }
 
   res.json(data);
@@ -37,50 +31,54 @@ router.get("/:id", async (req, res) => {
 // Ta bort en karaktär baserat på ID
 router.delete("/:id", async (req, res) => {
   const id = req.params.id;
-  const { error, status } = await supabase
+
+  const { error, status, data } = await supabase
     .from("characters")
     .delete()
+    .select()
+    .single()
     .eq("id", id);
 
   if (error) {
-    return res.status(status).json({ error: error.message });
+    res.status(status).json({ error });
   }
-  res.json({ message: "Character has been deleted" });
-});
 
-// Skapa ett nytt unikt ID för nya karaktärer
-let nextId = 28234;
+  res.json({ message: "Karaktären har blivit borttagen!", data });
+});
 
 // Lägg till ny karaktär
 router.post("/", async (req, res) => {
-  const body = req.body;
+  const character = req.body.character;
+
   const { data, error, status } = await supabase
     .from("characters")
-    .insert(body)
-    .select();
+    .insert(character)
+    .select()
+    .single();
 
   if (error) {
-    return res.status(status).json({ error: error.message });
+    res.status(status).json({ error });
   }
-
   res.json(data);
 });
 
 // Uppdatera en karaktär baserat på ID
 router.put("/:id", async (req, res) => {
   const id = req.params.id;
-  const updates = req.body;
-  const { data, error } = await supabase
+  const character = req.body.character;
+
+  const { data, error, status } = await supabase
     .from("characters")
-    .update(updates)
+    .update(character)
     .eq("id", id)
-    .select();
+    .select()
+    .single();
 
   if (error) {
-    return res.status(500).json({ error: error.message });
+    res.status(status).json({ error });
   }
 
-  res.json(data[0]);
+  res.json(data);
 });
 
 module.exports = router;
